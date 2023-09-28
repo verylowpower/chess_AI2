@@ -1,9 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\asset",
     "\\script"
   ],
-  "SelectedNode": "\\asset\\wR.png",
+  "SelectedNode": "\\main.py",
   "PreviewInSolutionExplorer": false
 }

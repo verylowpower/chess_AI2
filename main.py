@@ -23,13 +23,30 @@ def main():
     Screen.fill(pygame.Color("white")) #fill mau
     Gs=chess_engine.Gamestate() #truy cap class gamestate roi gan vao Gs
     LoadAsset()
-    
+    Sq_selected=() #tao tuple de track lan click cuoi cung (tuple:(row,col))
+    Player_click=[] #track click cua nguoi choi, vd tuple[(7,4);(4,4)] nguoi choi click vao quan co o vi tri (7,4) sau do di chuyen ra vi tri (4,4)
     #thoat game 
     running=True
     while running:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 running = False    
+                #track chuot
+            elif e.type ==pygame.MOUSEBUTTONDOWN:#ghi nhan xem chuot bam xuong(down) nhu nao, trong bao lau, trai hay phai,..
+                Location=pygame.mouse.get_pos()#toa do x, y cua chuot
+                #gan toa do x y vao chuot 
+                #lam nhu nay ta co the biet duoc chuot dang chon o vuong o vi tri nao
+                col= Location[0]//Sq_size
+                row = Location[1]//Sq_size
+                #neu nhu player bam vao o vuong 2 lan thi no co the nhan dien la da di 1 nuoc, vay nen ta can tranh truong hop do
+                if Sq_selected == (row,col): #neu player click vao 1 o vuong 2 lan
+                    Sq_selected =() #lam cho tuple rong = bo chon
+                    Player_click =[] #nhu tren
+                else: #khi nuoc di day hop le
+                    Sq_selected=(row,col) #luu 2 bien col, row vao tuple
+                    Player_click.append(Sq_selected) #them o vuong duoc chon vao danh sach quan co duoc chon
+                if len(Player_click)==2: 
+                
             drawGamestate(Screen,Gs)
             Clock.tick(Max_fps)
             pygame.display.flip()
@@ -65,6 +82,3 @@ def drawPiece(Screen,board):
 
 if __name__=="__main__":
     main()
-
-    
-        
