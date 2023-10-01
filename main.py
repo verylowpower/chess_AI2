@@ -1,4 +1,5 @@
 #file nay se nhan input vao hien thi len
+from shutil import move
 import pygame
 
 
@@ -46,7 +47,12 @@ def main():
                     Sq_selected=(row,col) #luu 2 bien col, row vao tuple
                     Player_click.append(Sq_selected) #them o vuong duoc chon vao danh sach quan co duoc chon
                 if len(Player_click)==2: 
-                
+                    move=chess_engine.Move(Player_click[0],Player_click[1],Gs.board)
+                    print(move.GetChessNotation())
+                    Gs.MakeMove(move)
+                    Sq_selected =() #reset vung chon cua player
+                    Player_click = []
+
             drawGamestate(Screen,Gs)
             Clock.tick(Max_fps)
             pygame.display.flip()
