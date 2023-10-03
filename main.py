@@ -1,5 +1,4 @@
 #file nay se nhan input vao hien thi len
-from shutil import move
 import pygame
 
 
@@ -52,6 +51,11 @@ def main():
                     Gs.MakeMove(move)
                     Sq_selected =() #reset vung chon cua player
                     Player_click = []
+            elif e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_z:
+                    Gs.UndoMove()
+                    
+            
 
             drawGamestate(Screen,Gs)
             Clock.tick(Max_fps)
@@ -66,7 +70,7 @@ def drawGamestate(Screen,Gs):
 #ve o vuong
 def drawBoard(Screen):
     #o vuong goc tren ben trai luon la mau sang
-    Colors =[pygame.Color("white"),pygame.Color("dark green")] #color dau la mau sang, sau la toi
+    Colors =[pygame.Color("white"),pygame.Color("gray")] #color dau la mau sang, sau la toi
     for r in range(Dimesion):
         for c in range(Dimesion): #su dung vong lap de to mau, neu le thi la sang con chan thi la toi
             Color = Colors[((r+c)%2)]

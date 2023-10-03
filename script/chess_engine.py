@@ -23,6 +23,13 @@ class Gamestate():
             this.board[move.endRow][move.endCol]= move.pieceMove
             this.Movelog.append(move)#luu vao movelog 
             this.WhiteToMove = not this.Wturn #doi luot
+            
+        def UndoMove(this):
+            if len(this.Movelog) != 0:
+                move = this.Movelog.pop()
+                this.board[move.startRow][move.startCol]= move.pieceMove
+                this.board[move.endRow][move.endCol] = move.pieceCaptured
+                this.Wturn = not this.Wturn
            
 class Move():
         #ki hieu o hang doc va hang ngang cua ban co
@@ -49,7 +56,7 @@ class Move():
 
             #cho phep ta co the xem duoc nuoc di nhu nao 
         def GetChessNotation(this): #notaion la ki hieu nuoc di, kieu g5->g7
-            return this.GetRankFile(this.startRow,this.startRow)+this.GetRankFile(this.endRow,this.endCol)  
+            return this.GetRankFile(this.startRow,this.startRow)+"->"+this.GetRankFile(this.endRow,this.endCol)  
             
         def GetRankFile(this,r,c): 
             return this.ColtoFile[c]+this.RowtoRank[r]  
