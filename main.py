@@ -17,14 +17,19 @@ def LoadAsset():
         Asset[piece]= pygame.transform.scale(pygame.image.load("asset/"+piece+".png"),(Sq_size,Sq_size)) #scale quan co theo o vuong
         
 def main():
-    pygame.init()
+    pygame.init()       
     Screen=pygame.display.set_mode((Width,Height)) #hien thi cua so
     Clock=pygame.time.Clock() 
     Screen.fill(pygame.Color("white")) #fill mau
-    Gs=chess_engine.Gamestate() #truy cap class gamestate roi gan vao Gs
+    Gs = chess_engine.Gamestate() #truy cap class gamestate roi gan vao Gs
+    
+    ValidMove = Gs.GetValidMove()#khi player di chuyen 1 quan co se luu vao list, sau do no se kiem tra xem nuoc di day co chieu tuong ko
+    #khi player tao ra 1 nuoc di chieu tuong, doi phuong thay doi nuoc di thi ham nay se dc lam moi, tranh viec goi ham lien tuc lam game cham di
+    MoveMade = False #day nhu 1 flag moi khi nuoc di dc tao ra
+    
     LoadAsset()
-    Sq_selected=() #tao tuple de track lan click cuoi cung (tuple:(row,col))
-    Player_click=[] #track click cua nguoi choi, vd tuple[(7,4);(4,4)] nguoi choi click vao quan co o vi tri (7,4) sau do di chuyen ra vi tri (4,4)
+    Sq_selected = () #tao tuple de track lan click cuoi cung (tuple:(row,col))
+    Player_click = [] #track click cua nguoi choi, vd tuple[(7,4);(4,4)] nguoi choi click vao quan co o vi tri (7,4) sau do di chuyen ra vi tri (4,4)
     #thoat game 
     running=True
     while running:
@@ -32,11 +37,11 @@ def main():
             if e.type == pygame.QUIT:
                 running = False    
                 #track chuot
-            elif e.type ==pygame.MOUSEBUTTONDOWN:#ghi nhan xem chuot bam xuong(down) nhu nao, trong bao lau, trai hay phai,..
+            elif e.type == pygame.MOUSEBUTTONDOWN:#ghi nhan xem chuot bam xuong(down) nhu nao, trong bao lau, trai hay phai,..
                 Location=pygame.mouse.get_pos()#toa do x, y cua chuot
                 #gan toa do x y vao chuot 
                 #lam nhu nay ta co the biet duoc chuot dang chon o vuong o vi tri nao
-                col= Location[0]//Sq_size
+                col = Location[0]//Sq_size
                 row = Location[1]//Sq_size
                 #neu nhu player bam vao o vuong 2 lan thi no co the nhan dien la da di 1 nuoc, vay nen ta can tranh truong hop do
                 if Sq_selected == (row,col): #neu player click vao 1 o vuong 2 lan
@@ -45,21 +50,30 @@ def main():
                 else: #khi nuoc di day hop le
                     Sq_selected=(row,col) #luu 2 bien col, row vao tuple
                     Player_click.append(Sq_selected) #them o vuong duoc chon vao danh sach quan co duoc chon
+                    
                 if len(Player_click)==2: 
-                    move=chess_engine.Move(Player_click[0],Player_click[1],Gs.board)
+                    move = chess_engine.Move(Player_click[0],Player_click[1],Gs.board)
                     print(move.GetChessNotation())
-                    Gs.MakeMove(move)
+                    if move in ValidMove:
+                        Gs.MakeMove(move) #khi 1 nuoc di dung luat -> tiep tuc move
+                        MoveMade = True #True thi cho phep quan co di   
                     Sq_selected =() #reset vung chon cua player
                     Player_click = []
-            elif e.type == pygame.KEYDOWN:
-                if e.key == pygame.K_z:
+            #gan chuc nang
+            elif e.type == pygame.KEYDOWN: #KEYDOWN la nhan phim
+                if e.key == pygame.K_z: #gan vao phim z
                     Gs.UndoMove()
-                    
+                    MoveMade = True
+                    print("undo")
+        
+        if MoveMade:
+            ValidMove = Gs.GetValidMove()
+            MoveMade = False 
             
-
-            drawGamestate(Screen,Gs)
-            Clock.tick(Max_fps)
-            pygame.display.flip()
+        
+        drawGamestate(Screen,Gs)
+        Clock.tick(Max_fps)
+        pygame.display.flip()
 
 #chiu trach nhiem hien thi tat ca do hoa cua class Gamestate
 def drawGamestate(Screen,Gs):

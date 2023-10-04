@@ -15,21 +15,70 @@ class Gamestate():
                 ["wP","wP","wP","wP","wP","wP","wP","wP"],
                 ["wR","wN","wB","wQ","wK","wB","wN","wR"]
                 ]
+
             this.Wturn= True #xac dinh dang den luot cua ai, trang hay den
             this.Movelog=[] #dung de luu cac nuoc di
             
         def MakeMove(this,move):
-            this.board[move.startRow][move.startCol]="--"
-            this.board[move.endRow][move.endCol]= move.pieceMove
+            this.board[move.startRow][move.startCol] = "--"
+            this.board[move.endRow][move.endCol] = move.pieceMove
             this.Movelog.append(move)#luu vao movelog 
-            this.WhiteToMove = not this.Wturn #doi luot
+            this.Wturn = not this.Wturn #doi luot
             
-        def UndoMove(this):
-            if len(this.Movelog) != 0:
-                move = this.Movelog.pop()
-                this.board[move.startRow][move.startCol]= move.pieceMove
-                this.board[move.endRow][move.endCol] = move.pieceCaptured
-                this.Wturn = not this.Wturn
+        def UndoMove(this): #undo 
+            if len(this.Movelog) != 0: #neu movelog co phan tu
+                move = this.Movelog.pop() #ham pop xoa phan tu cuoi cung cua danh sach
+                this.board[move.startRow][move.startCol]= move.pieceMove #vi tri bat dau
+                this.board[move.endRow][move.endCol] = move.pieceCaptured #vi tri ket thuc 
+                this.Wturn = not this.Wturn #swap
+                
+        def GetValidMove(this): #ham nay se xem co nuoc di nao chieu tuong ko
+            return this.GetAllMove()
+        
+        #khi ta chon 1 quan co, ham nay se nhan dien day la quan gi, trang hay den, co dang dung luot ko, sau do tra ve nuoc di cua quan do 
+        def GetAllMove(this):
+            moves = [] 
+            for r in range(len(this.board)): #su dung vong lap de do tren ma tran 2 chieu
+                for c in range(len(this.board)):
+                    turn = this.board[r][c][0] #[row][col][chu cai dau tien] tham chieu nhu tren phan tu board
+                    if(turn == 'w' and this.Wturn) or (turn == 'b' and not this.Wturn):
+                        piece = this.board[r][c][1]#loai quan co
+                        if piece == 'P':
+                            this.PawnMove(r,c,moves)
+                        if piece == 'R':
+                            this.RookMove(r,c,moves)
+            return moves
+        
+        def PawnMove(this,r,c,moves):
+            if this.Wturn: #tot trang
+                if this.board[r-1][c] == "--": #kiem tra xem o truoc mat la o trong hay ko    
+                    moves.append(Move((r,c),(r-1,c),this.board))
+                    if r == 6 and this.board[r-2][c] == "--":
+                        moves.append(Move((r,c),(r-2,c),this.board)) 
+                #an quan
+                if c-1 >= 0:
+                    if this.board[r-1][c-1][0] == "b":
+                        moves.append(Move((r,c),(r-1,c-1),this.board))
+                if c+1 <= 7:
+                    if this.board[r-1][c+1][0] == "b":
+                        moves.append(Move((r,c),(r-1,c+1),this.board))
+            if not this.Wturn: #tot trang
+                if this.board[r+1][c] == "--": #kiem tra xem o truoc mat la o trong hay ko    
+                    moves.append(Move((r,c),(r+1,c),this.board))
+                    if r == 1 and this.board[r+2][c] == "--":
+                        moves.append(Move((r,c),(r+2,c),this.board)) 
+                #an quan
+                if c+1 <= 7:
+                    if this.board[r+1][c-1][0] == "w":
+                        moves.append(Move((r,c),(r+1,c+1),this.board))
+                if c-1 >= 0:
+                    if this.board[r+1][c-1][0] == "b":
+                        moves.append(Move((r,c),(r+1,c-1),this.board))
+                
+            
+        
+        def RookMove(this,r,c,moves):
+            pass
            
 class Move():
         #ki hieu o hang doc va hang ngang cua ban co
@@ -53,6 +102,12 @@ class Move():
             #cho biet quan co nao da bi an
             this.pieceCaptured=board[this.endRow][this.endCol]
             #sau do luu vao Movelog de co the undo
+            this.MoveID = this.startRow*1000 + this.startCol*100 + this.endRow*10 + this.endCol
+            
+        def __eq__(this,other):
+            if isinstance(other,Move):
+                return this.MoveID == other.MoveID
+            return False
 
             #cho phep ta co the xem duoc nuoc di nhu nao 
         def GetChessNotation(this): #notaion la ki hieu nuoc di, kieu g5->g7
