@@ -19,12 +19,19 @@ class Gamestate():
                              "B":this.BishopMove,"Q":this.QueenMove,"K":this.KingMove}
             this.Wturn= True #xac dinh dang den luot cua ai, trang hay den
             this.Movelog=[] #dung de luu cac nuoc di
+            this.WKlocation = (7,4)
+            this.BKlocation = (0,4)
             
         def MakeMove(this,move):
             this.board[move.startRow][move.startCol] = "--"
             this.board[move.endRow][move.endCol] = move.pieceMove
             this.Movelog.append(move)#luu vao movelog 
             this.Wturn = not this.Wturn #doi luot
+            #update vi tri cua king neu di chuyen
+            if move.pieceMove == "wK":
+                this.WKlocation = (move.endRow,move.endCol)
+            elif move.pieceMove == "bK":
+                this.BKlocation = (move.endRow,move.endCol)
             
         def UndoMove(this): #undo 
             if len(this.Movelog) != 0: #neu movelog co phan tu
@@ -32,6 +39,10 @@ class Gamestate():
                 this.board[move.startRow][move.startCol]= move.pieceMove #vi tri bat dau
                 this.board[move.endRow][move.endCol] = move.pieceCaptured #vi tri ket thuc 
                 this.Wturn = not this.Wturn #swap
+                if move.pieceMove == "wK":
+                    this.WKlocation = (move.startRow,move.startCol)
+                elif move.pieceMove == "bK":
+                    this.BKlocation = (move.startRow,move.startCol)
                 
         def GetValidMove(this): #ham nay se xem co nuoc di nao chieu tuong ko
             return this.GetAllMove()
