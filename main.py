@@ -57,8 +57,10 @@ def main():
                     if move in ValidMove:
                         Gs.MakeMove(move) #khi 1 nuoc di dung luat -> tiep tuc move
                         MoveMade = True #True thi cho phep quan co di   
-                    Sq_selected =() #reset vung chon cua player
-                    Player_click = []
+                        Sq_selected =() #reset vung chon cua player
+                        Player_click = []
+                    else:
+                        Player_click = [Sq_selected]
             #gan chuc nang
             elif e.type == pygame.KEYDOWN: #KEYDOWN la nhan phim
                 if e.key == pygame.K_z: #gan vao phim z

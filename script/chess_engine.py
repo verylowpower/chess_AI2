@@ -15,7 +15,8 @@ class Gamestate():
                 ["wP","wP","wP","wP","wP","wP","wP","wP"],
                 ["wR","wN","wB","wQ","wK","wB","wN","wR"]
                 ]
-
+            this.MoveUnit = {"P":this.PawnMove,"R":this.RookMove,"N":this.KnightMove,
+                             "B":this.BishopMove,"Q":this.QueenMove,"K":this.KingMove}
             this.Wturn= True #xac dinh dang den luot cua ai, trang hay den
             this.Movelog=[] #dung de luu cac nuoc di
             
@@ -43,10 +44,7 @@ class Gamestate():
                     turn = this.board[r][c][0] #[row][col][chu cai dau tien] tham chieu nhu tren phan tu board
                     if(turn == 'w' and this.Wturn) or (turn == 'b' and not this.Wturn):
                         piece = this.board[r][c][1]#loai quan co
-                        if piece == 'P':
-                            this.PawnMove(r,c,moves)
-                        if piece == 'R':
-                            this.RookMove(r,c,moves)
+                        this.MoveUnit[piece](r,c,moves)
             return moves
         
         def PawnMove(this,r,c,moves):
@@ -56,37 +54,99 @@ class Gamestate():
                     if r == 6 and this.board[r-2][c] == "--":
                         moves.append(Move((r,c),(r-2,c),this.board)) 
                 #an quan
-                if c-1 >= 0:
+                if c-1 >= 0: #an quan ben trai
                     if this.board[r-1][c-1][0] == "b":
                         moves.append(Move((r,c),(r-1,c-1),this.board))
-                if c+1 <= 7:
+                if c+1 <= 7: #an quan ben phai
                     if this.board[r-1][c+1][0] == "b":
                         moves.append(Move((r,c),(r-1,c+1),this.board))
-            if not this.Wturn: #tot trang
+            else: #den
                 if this.board[r+1][c] == "--": #kiem tra xem o truoc mat la o trong hay ko    
                     moves.append(Move((r,c),(r+1,c),this.board))
                     if r == 1 and this.board[r+2][c] == "--":
                         moves.append(Move((r,c),(r+2,c),this.board)) 
                 #an quan
-                if c+1 <= 7:
+                if c+1 <= 7: #an quan ben phai
                     if this.board[r+1][c-1][0] == "w":
                         moves.append(Move((r,c),(r+1,c+1),this.board))
-                if c-1 >= 0:
-                    if this.board[r+1][c-1][0] == "b":
+                if c-1 >= 0: #an quan ben trai
+                    if this.board[r+1][c-1][0] == "w":
                         moves.append(Move((r,c),(r+1,c-1),this.board))
                 
-            
-        
         def RookMove(this,r,c,moves):
-            pass
+            direction = ((-1,0),(1,0),(0,-1),(0,1)) #tren trai duoi phai
+            EnemyColor = "b" if this.Wturn else "w"
+            for d in direction:
+                for i in range(1,8):
+                    endRow = r + d[0]*i
+                    endCol = c + d[1]*i
+                    if 0<=endRow<8 and 0<=endCol<8: #tren ban co
+                        endPiece=this.board[endRow][endCol]
+                        if endPiece == "--":
+                            moves.append(Move((r,c),(endRow,endCol),this.board))
+                        elif endPiece[0]==EnemyColor: #khi co quan doi phuong
+                            moves.append(Move((r,c),(endRow,endCol),this.board))
+                            break
+                        else: #khi gap quan cung mau
+                            break
+                    else: 
+                        break
+          
+        def BishopMove(this,r,c,moves):
+            direction = ((-1,1),(1,-1),(-1,-1),(1,1)) #tren trai duoi phai
+            EnemyColor = "b" if this.Wturn else "w"
+            for d in direction:
+                for i in range(1,8):
+                    endRow = r + d[0]*i
+                    endCol = c + d[1]*i
+                    if 0<=endRow<8 and 0<=endCol<8: #tren ban co
+                        endPiece=this.board[endRow][endCol]
+                        if endPiece == "--":
+                            moves.append(Move((r,c),(endRow,endCol),this.board))
+                        elif endPiece[0]==EnemyColor: #khi co quan doi phuong
+                            moves.append(Move((r,c),(endRow,endCol),this.board))
+                            break
+                        else: #khi gap quan cung mau
+                            break
+                    else: 
+                        break
+                    
+        def KnightMove(this,r,c,moves):
+            direction =((2,-1),(-2,1),(1,-2),(-1,2),(-1,-2),(1,2),(2,1),(-2,-1))
+            allycolor ="w" if this.Wturn else "b"
+            for m in direction:
+                endRow = r + m[0]
+                endCol = c + m[1]
+                if 0 <= endRow <8 and 0 <= endCol <8:
+                    endPiece = this.board[endRow][endCol]
+                    if endPiece[0]!= allycolor:
+                        moves.append(Move((r,c),(endRow,endCol),this.board))
+       
+        def QueenMove(this,r,c,moves):
+            this.BishopMove(r,c,moves)
+            this.RookMove(r,c,moves)
+        
+        def KingMove(this,r,c,moves):
+            direction = ((-1,-1),(1,1),(1,-1),(-1,1),(1,0),(-1,0),(0,1),(0,-1))
+            allycolor = "w" if this.Wturn else "b"
+            for i in range(8):
+                endRow = r + direction[i][0]
+                endCol = c + direction[i][1]
+                if 0<= endRow <8 and 0<= endCol <8:
+                    endPiece = this.board[endRow][endCol]
+                    if endPiece[0] != allycolor:
+                        moves.append(Move((r,c),(endRow,endCol),this.board))
            
 class Move():
         #ki hieu o hang doc va hang ngang cua ban co
         #gia tri cua no trong ma tran 2 chieu    
         #trong co vua rank la hang va file la cot
-        RanktoRow={"1":7,"2":6,"3":5,"4":4,"5":3,"6":2,"7":1,"8":0} 
+        RanktoRow={"1":7,"2":6,"3":5,"4":4,
+                   "5":3,"6":2,"7":1,"8":0} 
         RowtoRank={v:k for k, v in RanktoRow.items()}
-        FiletoCol={"a":0,"b":1,"c":2,"d":3,"e":4,"f":5,"g":6,"h":7}
+        
+        FiletoCol={"a":0,"b":1,"c":2,"d":3,
+                   "e":4,"f":5,"g":6,"h":7}
         ColtoFile={v:k for k, v in FiletoCol.items()}
         
 
