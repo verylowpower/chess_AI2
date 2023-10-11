@@ -21,6 +21,8 @@ class Gamestate():
             this.Movelog=[] #dung de luu cac nuoc di
             this.WKlocation = (7,4)
             this.BKlocation = (0,4)
+            this.CheckMate = False #dang chieu tuong
+            this.StaleMate = False #vua het nuoc di
             
         def MakeMove(this,move):
             this.board[move.startRow][move.startCol] = "--"
@@ -45,7 +47,40 @@ class Gamestate():
                     this.BKlocation = (move.startRow,move.startCol)
                 
         def GetValidMove(this): #ham nay se xem co nuoc di nao chieu tuong ko
-            return this.GetAllMove()
+            moves = this.GetAllMove()
+            for i in range(len(moves)-1,-1,-1):
+                this.MakeMove(moves[i])
+                this.Wturn = not this.Wturn
+                if this.InCheck():
+                    moves.remove(moves[i])
+                this.Wturn = not this.Wturn
+                this.UndoMove()
+            if len(moves) == 0:
+                if this.InCheck():
+                    this.CheckMate = True
+                else:
+                    this.StaleMate = True
+            else:
+                this.CheckMate = False
+                this.StaleMate = False
+            return moves
+        
+        #xem co dang bi chieu tuong ko?
+        def InCheck(this):
+            if this.Wturn:
+                return this.SqUnderAtk(this.WKlocation[0], this.WKlocation[1])
+            else:
+                return this.SqUnderAtk(this.BKlocation[0], this.BKlocation[1])
+        
+        #du doan xem doi phuong co the an quan nao
+        def SqUnderAtk(this,r,c):
+            this.Wturn = not this.Wturn #swap turn
+            oppMove = this.GetAllMove()
+            this.Wturn = not this.Wturn #swap lai
+            for move in oppMove:
+                if move.endRow == r and move.endCol == c: #dang cb an o nay
+                    return True
+            return False
         
         #khi ta chon 1 quan co, ham nay se nhan dien day la quan gi, trang hay den, co dang dung luot ko, sau do tra ve nuoc di cua quan do 
         def GetAllMove(this):
