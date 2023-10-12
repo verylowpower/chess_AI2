@@ -34,6 +34,11 @@ class Gamestate():
                 this.WKlocation = (move.endRow,move.endCol)
             elif move.pieceMove == "bK":
                 this.BKlocation = (move.endRow,move.endCol)
+            #phong cap
+            if move.pawnPromotion:
+                this.board[move.endRow][move.endCol] = move.pieceMove[0] + "Q"
+                
+        
             
         def UndoMove(this): #undo 
             if len(this.Movelog) != 0: #neu movelog co phan tu
@@ -41,12 +46,15 @@ class Gamestate():
                 this.board[move.startRow][move.startCol]= move.pieceMove #vi tri bat dau
                 this.board[move.endRow][move.endCol] = move.pieceCaptured #vi tri ket thuc 
                 this.Wturn = not this.Wturn #swap
+                
                 if move.pieceMove == "wK":
                     this.WKlocation = (move.startRow,move.startCol)
                 elif move.pieceMove == "bK":
                     this.BKlocation = (move.startRow,move.startCol)
+               
                 
         def GetValidMove(this): #ham nay se xem co nuoc di nao chieu tuong ko
+           
             moves = this.GetAllMove()
             for i in range(len(moves)-1,-1,-1):
                 this.MakeMove(moves[i])
@@ -63,6 +71,8 @@ class Gamestate():
             else:
                 this.CheckMate = False
                 this.StaleMate = False
+          
+            
             return moves
         
         #xem co dang bi chieu tuong ko?
@@ -103,9 +113,12 @@ class Gamestate():
                 if c-1 >= 0: #an quan ben trai
                     if this.board[r-1][c-1][0] == "b":
                         moves.append(Move((r,c),(r-1,c-1),this.board))
+                   
+                        
                 if c+1 <= 7: #an quan ben phai
                     if this.board[r-1][c+1][0] == "b":
                         moves.append(Move((r,c),(r-1,c+1),this.board))
+                    
             else: #den
                 if this.board[r+1][c] == "--": #kiem tra xem o truoc mat la o trong hay ko    
                     moves.append(Move((r,c),(r+1,c),this.board))
@@ -115,9 +128,12 @@ class Gamestate():
                 if c+1 <= 7: #an quan ben phai
                     if this.board[r+1][c-1][0] == "w":
                         moves.append(Move((r,c),(r+1,c+1),this.board))
+                   
+                        
                 if c-1 >= 0: #an quan ben trai
                     if this.board[r+1][c-1][0] == "w":
                         moves.append(Move((r,c),(r+1,c-1),this.board))
+                  
                 
         def RookMove(this,r,c,moves):
             direction = ((-1,0),(1,0),(0,-1),(0,1)) #tren trai duoi phai
@@ -207,6 +223,11 @@ class Move():
             this.pieceMove=board[this.startRow][this.startCol]
             #cho biet quan co nao da bi an
             this.pieceCaptured=board[this.endRow][this.endCol]
+            #phong cap
+            this.pawnPromotion = (this.pieceMove == "wP" and this.endRow == 0) or (this.pieceMove == "bP" and this.endRow == 7)
+            #an tot qua song
+           
+            
             #sau do luu vao Movelog de co the undo
             this.MoveID = this.startRow*1000 + this.startCol*100 + this.endRow*10 + this.endCol
             
@@ -217,7 +238,7 @@ class Move():
 
             #cho phep ta co the xem duoc nuoc di nhu nao 
         def GetChessNotation(this): #notaion la ki hieu nuoc di, kieu g5->g7
-            return this.GetRankFile(this.startRow,this.startRow)+"->"+this.GetRankFile(this.endRow,this.endCol)  
+            return this.GetRankFile(this.startRow,this.startRow)+"-"+this.GetRankFile(this.endRow,this.endCol)  
             
         def GetRankFile(this,r,c): 
             return this.ColtoFile[c]+this.RowtoRank[r]  
