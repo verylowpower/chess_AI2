@@ -15,14 +15,25 @@ class Gamestate():
                 ["wP","wP","wP","wP","wP","wP","wP","wP"],
                 ["wR","wN","wB","wQ","wK","wB","wN","wR"]
                 ]
+            
+            
             this.MoveUnit = {"P":this.PawnMove,"R":this.RookMove,"N":this.KnightMove,
                              "B":this.BishopMove,"Q":this.QueenMove,"K":this.KingMove}
-            this.Wturn= True #xac dinh dang den luot cua ai, trang hay den
-            this.Movelog=[] #dung de luu cac nuoc di
-            this.WKlocation = (7,4)
-            this.BKlocation = (0,4)
+            this.Wturn = True #xac dinh dang den luot cua ai, trang hay den
+            this.Movelog = [] #dung de luu cac nuoc di
+            this.WKlocation = (7,3)
+            this.BKlocation = (0,3)
+            this.bRl = (0,0)
+            this.bRr = (0,7)
+            this.wRl = (7,0)
+            this.wRr = (7,7)
             this.CheckMate = False #dang chieu tuong
             this.StaleMate = False #vua het nuoc di
+            
+            this.currentCastleRight = CastleRight(True,True,True,True)
+            this.CastleRightLog = [CastleRight(this.currentCastleRight.wks, this.currentCastleRight.bks,
+                                               this.currentCastleRight.wqs, this.currentCastleRight.bqs)]
+            
             
         def MakeMove(this,move):
             this.board[move.startRow][move.startCol] = "--"
@@ -34,11 +45,23 @@ class Gamestate():
                 this.WKlocation = (move.endRow,move.endCol)
             elif move.pieceMove == "bK":
                 this.BKlocation = (move.endRow,move.endCol)
+                
             #phong cap
             if move.pawnPromotion:
                 this.board[move.endRow][move.endCol] = move.pieceMove[0] + "Q"
-                
-        
+            #nhap thanh
+            if move.isCastleMove:
+                print("here")
+                if move.endCol - move.startCol == 2: #ben vua
+                    this.board[move.endRow][move.endCol-1] = this.board[move.endRow][move.endCol+1] #di chuyen quan xe
+                    this.board[move.endRow][move.endCol+1] = "--" #xoa quan xe cu
+                else: #ben hau 
+                    this.board[move.endRow][move.endCol+1] = this.board[move.endRow][move.endCol-2] #di chuyen quan xe
+                    this.board[move.endRow][move.endCol-2] = "--" #xoa quan xe cu 
+            #luu log de co the undo
+            this.UpdateCastleRight(move)
+            this.CastleRightLog.append(CastleRight(this.currentCastleRight.wks, this.currentCastleRight.bks,
+                                                   this.currentCastleRight.wqs, this.currentCastleRight.bqs))
             
         def UndoMove(this): #undo 
             if len(this.Movelog) != 0: #neu movelog co phan tu
@@ -51,11 +74,51 @@ class Gamestate():
                     this.WKlocation = (move.startRow,move.startCol)
                 elif move.pieceMove == "bK":
                     this.BKlocation = (move.startRow,move.startCol)
+                
+                #undo nhap thanh
+                this.CastleRightLog.pop()
+                newRight = this.CastleRightLog[-1]
+                this.currentCastleRight = CastleRight(newRight.wks,newRight.wqs,newRight.bqs,newRight.bks)
+                
+                if move.isCastleMove:
+                    print("undo castle")
+                    if move.endCol - move.startRow == 2: #ben vua
+                        this.board[move.endRow][move.endCol+1] = this.board[move.endRow][move.endCol-1]
+                        this.board[move.endRow][move.endCol-1] = "--"
+                    else: #ben hau
+                        this.board[move.endRow][move.endCol-2] = this.board[move.endRow][move.endCol+1]
+                        this.board[move.endRow][move.endCol+1] = "--"
+                
+         
+        def UpdateCastleRight(this,move): #khi quan co thay doi vi tri thi viec nhap thanh se ko dien ra
+            if move.pieceMove == "wK":
+                this.currentCastleRight.wks = False
+                this.currentCastleRight.wqs = False
+            if move.pieceMove == "bK":
+                this.currentCastleRight.bks = False
+                this.currentCastleRight.bqs = False
+                
+            elif move.pieceMove == "wR":
+                if move.startRow == 7:
+                    if move.startCol == 0:
+                        this.currentCastleRight.wqs = False
+                    elif move.startCol == 7: 
+                        this.currentCastleRight.wks = False
+            elif move.pieceMove == "bR":
+                if move.startRow == 0:
+                    if move.startCol == 0:
+                        this.currentCastleRight.bqs = False
+                    elif move.startCol == 7: 
+                        this.currentCastleRight.bks = False
+                    
                
                 
         def GetValidMove(this): #ham nay se xem co nuoc di nao chieu tuong ko
-           
+            
+            tempCastle = CastleRight(this.currentCastleRight.wks, this.currentCastleRight.bks,
+                                     this.currentCastleRight.wqs, this.currentCastleRight.bqs)
             moves = this.GetAllMove()
+            
             for i in range(len(moves)-1,-1,-1):
                 this.MakeMove(moves[i])
                 this.Wturn = not this.Wturn
@@ -71,8 +134,12 @@ class Gamestate():
             else:
                 this.CheckMate = False
                 this.StaleMate = False
-          
             
+            if this.Wturn:
+                this.getCastleMove(this.WKlocation[0],this.WKlocation[1],moves)
+            else:
+                this.getCastleMove(this.BKlocation[0],this.BKlocation[1],moves) 
+            this.currentCastleRight = tempCastle
             return moves
         
         #xem co dang bi chieu tuong ko?
@@ -96,7 +163,7 @@ class Gamestate():
         def GetAllMove(this):
             moves = [] 
             for r in range(len(this.board)): #su dung vong lap de do tren ma tran 2 chieu
-                for c in range(len(this.board)):
+                for c in range(len(this.board[r])):
                     turn = this.board[r][c][0] #[row][col][chu cai dau tien] tham chieu nhu tren phan tu board
                     if(turn == 'w' and this.Wturn) or (turn == 'b' and not this.Wturn):
                         piece = this.board[r][c][1]#loai quan co
@@ -198,6 +265,34 @@ class Gamestate():
                     endPiece = this.board[endRow][endCol]
                     if endPiece[0] != allycolor:
                         moves.append(Move((r,c),(endRow,endCol),this.board))
+            
+            
+        def getCastleMove(this,r,c,moves):
+            if this.SqUnderAtk(r,c): #neu nhu vi tri nhap thanh khong bi tan cong thi nhap thanh binh thuong
+                return #neu co thi ko dc nhap thanh
+            if (this.Wturn and this.currentCastleRight.wks) or (not this.Wturn and this.currentCastleRight.bks):
+                this.getKingside(r,c,moves)
+            if (this.Wturn and this.currentCastleRight.wqs) or (not this.Wturn and this.currentCastleRight.bqs):
+                this.getQueenside(r,c,moves)
+            
+        def getKingside(this,r,c,moves):
+            if this.board[r][c+1] == "--" and this.board[r][c+2] == "--":
+                if not this.SqUnderAtk(r,c+1) and not this.SqUnderAtk(r,c+2):
+                    moves.append(Move((r,c),(r,c+2),this.board,isCastleMove=True))
+        
+        def getQueenside(this,r,c,moves):
+            if this.board[r][c-1] == "--" and this.board[r][c-2] == "--" and this.board[r][c-3]:
+                if not this.SqUnderAtk(r,c-1) and not this.SqUnderAtk(r,c-2):
+                    moves.append(Move((r,c),(r,c-2),this.board,isCastleMove=True))
+
+class CastleRight():
+    def __init__(this,wks,bks,wqs,bqs):
+        this.wks = wks
+        this.bks = bks
+        this.wqs = wqs
+        this.bqs = bqs
+        
+        
            
 class Move():
         #ki hieu o hang doc va hang ngang cua ban co
@@ -212,7 +307,7 @@ class Move():
         ColtoFile={v:k for k, v in FiletoCol.items()}
         
 
-        def __init__(this,StartSq,EndSq,board):  
+        def __init__(this,StartSq,EndSq,board,isCastleMove = False):  
             #quan co di chuyen tu vi tri 
             this.startRow=StartSq[0]
             this.startCol=StartSq[1]
@@ -225,9 +320,9 @@ class Move():
             this.pieceCaptured=board[this.endRow][this.endCol]
             #phong cap
             this.pawnPromotion = (this.pieceMove == "wP" and this.endRow == 0) or (this.pieceMove == "bP" and this.endRow == 7)
-            #an tot qua song
+            #castling
+            this.isCastleMove = isCastleMove
            
-            
             #sau do luu vao Movelog de co the undo
             this.MoveID = this.startRow*1000 + this.startCol*100 + this.endRow*10 + this.endCol
             

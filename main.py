@@ -78,13 +78,7 @@ def main():
                     MoveMade = True
                     Animate = False
                     print("undo")
-                if e.key == pygame.K_r:
-                    Gs = chess_engine.Gamestate()
-                    ValidMove = Gs.GetValidMove()
-                    Sq_selected = ()
-                    Player_click = ()
-                    MoveMade = False
-                    Animate = False
+               
         
         if MoveMade:
             if Animate:
@@ -154,7 +148,7 @@ def Animation(move, Screen, board, Clock):
     global Colors
     dR = move.endRow - move.startRow
     dC = move.endCol - move.startCol
-    Fps = 10
+    Fps = 5
     frameCount = (abs(dR)+abs(dC))*Fps
     for f in range(frameCount+1):
         r,c = (move.startRow +dR*f/frameCount, move.startCol+dC*f/frameCount)
@@ -178,6 +172,9 @@ def drawText(Screen,text):
     Screen.blit(textObject,textLocation)
     textObject = font.render(text,0,pygame.Color('Black')) 
     Screen.blit(textObject,textLocation.move(2,2))
+
+
+                
 
 if __name__=="__main__":
     main()
