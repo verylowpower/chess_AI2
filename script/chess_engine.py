@@ -23,16 +23,9 @@ class Gamestate():
             this.Movelog = [] #dung de luu cac nuoc di
             this.WKlocation = (7,3)
             this.BKlocation = (0,3)
-            this.bRl = (0,0)
-            this.bRr = (0,7)
-            this.wRl = (7,0)
-            this.wRr = (7,7)
+            
             this.CheckMate = False #dang chieu tuong
             this.StaleMate = False #vua het nuoc di
-            
-            this.currentCastleRight = CastleRight(True,True,True,True)
-            this.CastleRightLog = [CastleRight(this.currentCastleRight.wks, this.currentCastleRight.bks,
-                                               this.currentCastleRight.wqs, this.currentCastleRight.bqs)]
             
             
         def MakeMove(this,move):
