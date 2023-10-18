@@ -2,7 +2,7 @@
 import pygame
 
 
-from script import chess_engine #truy cap module
+from script import chess_engine, Smartmove_FINDER #truy cap module
 
 
 Width = Height = 512 #kich thuoc ban co 
@@ -30,18 +30,23 @@ def main():
     MoveMade = False #day nhu 1 flag moi khi nuoc di dc tao ra
     Animate = False
     LoadAsset()
+    running=True
     Sq_selected = () #tao tuple de track lan click cuoi cung (tuple:(row,col))
     Player_click = [] #track click cua nguoi choi, vd tuple[(7,4);(4,4)] nguoi choi click vao quan co o vi tri (7,4) sau do di chuyen ra vi tri (4,4)
     GameOver = False
     #thoat game 
-    running=True
+    player_one = True #đúng khi người chơi quân trắng, sai khi Ai chơi quân trắng
+    player_two = False #Như trên nhưng với cho quân đen
+   
     while running:
+        human_turn = (Gs.Wturn and player_one) or (not Gs.Wturn and player_two)
+        #Kiểm tra người chơi hay máy chơi
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 running = False    
                 #track chuot
             elif e.type == pygame.MOUSEBUTTONDOWN:#ghi nhan xem chuot bam xuong(down) nhu nao, trong bao lau, trai hay phai,..
-                if not GameOver:
+                if not GameOver and human_turn:
                     Location=pygame.mouse.get_pos()#toa do x, y cua chuot
                     #gan toa do x y vao chuot 
                     #lam nhu nay ta co the biet duoc chuot dang chon o vuong o vi tri nao
@@ -78,7 +83,16 @@ def main():
                     MoveMade = True
                     Animate = False
                     print("undo")
-               
+        
+        
+        #AI tìm đường
+        if not GameOver and not human_turn:
+            AI_move = Smartmove_FINDER.findBestMove(Gs, ValidMove)
+            if AI_move is None:
+                AI_move = Smartmove_FINDER.findRandomMove(ValidMove)
+            Gs.MakeMove(AI_move)
+            MoveMade = True
+            Animate = True
         
         if MoveMade:
             if Animate:
@@ -148,7 +162,7 @@ def Animation(move, Screen, board, Clock):
     global Colors
     dR = move.endRow - move.startRow
     dC = move.endCol - move.startCol
-    Fps = 5
+    Fps = 3
     frameCount = (abs(dR)+abs(dC))*Fps
     for f in range(frameCount+1):
         r,c = (move.startRow +dR*f/frameCount, move.startCol+dC*f/frameCount)
