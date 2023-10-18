@@ -54,6 +54,8 @@ class Gamestate():
                     this.WKlocation = (move.startRow,move.startCol)
                 elif move.pieceMove == "bK":
                     this.BKlocation = (move.startRow,move.startCol)
+            this.CheckMate = False
+            this.StaleMate = False
             
         def GetValidMove(this): #ham nay se xem co nuoc di nao chieu tuong ko
             
