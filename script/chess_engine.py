@@ -4,7 +4,7 @@ import pygame
 class Gamestate():
         def __init__(this):
             #tao ban co de quan co vao vi tri
-            
+            #b = black , w = white 
             this.board =[
                 ["bR","bN","bB","bK","bQ","bB","bN","bR"],
                 ["bP","bP","bP","bP","bP","bP","bP","bP"],
@@ -16,7 +16,6 @@ class Gamestate():
                 ["wR","wN","wB","wQ","wK","wB","wN","wR"]
                 ]
             
-            
             this.MoveUnit = {"P":this.PawnMove,"R":this.RookMove,"N":this.KnightMove,
                              "B":this.BishopMove,"Q":this.QueenMove,"K":this.KingMove}
             this.Wturn = True #xac dinh dang den luot cua ai, trang hay den
@@ -25,7 +24,6 @@ class Gamestate():
             this.BKlocation = (0,3)
             this.CheckMate = False #dang chieu tuong
             this.StaleMate = False #vua het nuoc di
-           
             
         def MakeMove(this,move):
             this.board[move.startRow][move.startCol] = "--"
@@ -37,12 +35,10 @@ class Gamestate():
                 this.WKlocation = (move.endRow,move.endCol)
             elif move.pieceMove == "bK":
                 this.BKlocation = (move.endRow,move.endCol)
-                
             #phong cap
             if move.pawnPromotion:
                 this.board[move.endRow][move.endCol] = move.pieceMove[0] + "Q"
            
-            
         def UndoMove(this): #undo 
             if len(this.Movelog) != 0: #neu movelog co phan tu
                 move = this.Movelog.pop() #ham pop xoa phan tu cuoi cung cua danh sach
@@ -54,27 +50,29 @@ class Gamestate():
                     this.WKlocation = (move.startRow,move.startCol)
                 elif move.pieceMove == "bK":
                     this.BKlocation = (move.startRow,move.startCol)
+                    
             this.CheckMate = False
             this.StaleMate = False
             
         def GetValidMove(this): #ham nay se xem co nuoc di nao chieu tuong ko
-            
+            #tao ra tat ca cac nuoc di phe hien tai co the di
             moves = this.GetAllMove()
-            
-            for i in range(len(moves)-1,-1,-1):
-                this.MakeMove(moves[i])
-                this.Wturn = not this.Wturn
+            #voi moi nuoc di, di nuoc di do
+            for i in range(len(moves)-1,-1,-1): #kiem tra nguoc tu cuoi len dau de tranh bo sot 
+                this.MakeMove(moves[i]) #tao ra tat ca cac nuoc di cua phe doi phuong(vi trong ham MakeMove co cau lenh chuyen luot nen phai chuyen nguoc lai)
+                this.Wturn = not this.Wturn #chuyen luot ve phe bi chieu
+                if this.InCheck(): #kiem tra xem co nuoc di nao cua doi phuong chieu vua khong
+                    moves.remove(moves[i]) #neu nhu quan vua van dang bi chieu, xoa bo nuoc di do
+                this.Wturn = not this.Wturn #doi ve luot cua quan doi phuong
+                this.UndoMove() #goi undomove de huy bo nuoc di this.MakeMove(moves[i]) va dua ve luot ban dau
+                
+            if len(moves) == 0: #neu khong con nuoc di nao nua
                 if this.InCheck():
-                    moves.remove(moves[i])
-                this.Wturn = not this.Wturn
-                this.UndoMove()
-            if len(moves) == 0:
-                if this.InCheck():
-                    this.CheckMate = True
+                    this.CheckMate = True #chieu het
                 else:
-                    this.StaleMate = True
+                    this.StaleMate = True # hoa
             else:
-                this.CheckMate = False
+                this.CheckMate = False #tiep tuc choi
                 this.StaleMate = False
                 
             return moves
@@ -82,17 +80,17 @@ class Gamestate():
         #xem co dang bi chieu tuong ko?
         def InCheck(this):
             if this.Wturn:
-                return this.SqUnderAtk(this.WKlocation[0], this.WKlocation[1])
+                return this.SqUnderAtk(this.WKlocation[0], this.WKlocation[1]) #neu r,c cua trung voi vi tri hien tai cua vua
             else:
                 return this.SqUnderAtk(this.BKlocation[0], this.BKlocation[1])
         
         #du doan xem doi phuong co the an quan nao
         def SqUnderAtk(this,r,c):
-            this.Wturn = not this.Wturn #swap turn
-            oppMove = this.GetAllMove()
+            this.Wturn = not this.Wturn #doi sang luot cua doi phuong
+            oppMove = this.GetAllMove() #tao ra tat ca cac nuoc di cua doi phuong
             this.Wturn = not this.Wturn #swap lai
-            for move in oppMove:
-                if move.endRow == r and move.endCol == c: #dang cb an o nay
+            for move in oppMove: 
+                if move.endRow == r and move.endCol == c:
                     return True
             return False
         
@@ -133,8 +131,6 @@ class Gamestate():
                 if c+1 <= 7: #an quan ben phai
                     if this.board[r+1][c+1][0] == "w":
                         moves.append(Move((r,c),(r+1,c+1),this.board))       
-                
-                  
                 
         def RookMove(this,r,c,moves):
             direction = ((-1,0),(1,0),(0,-1),(0,1)) #tren trai duoi phai
@@ -199,12 +195,7 @@ class Gamestate():
                     endPiece = this.board[endRow][endCol]
                     if endPiece[0] != allycolor:
                         moves.append(Move((r,c),(endRow,endCol),this.board))
-            
-            
-       
-        
-        
-           
+                        
 class Move():
         #ki hieu o hang doc va hang ngang cua ban co
         #gia tri cua no trong ma tran 2 chieu    
@@ -217,7 +208,6 @@ class Move():
                    "e":4,"f":5,"g":6,"h":7}
         ColtoFile={v:k for k, v in FiletoCol.items()}
         
-
         def __init__(this,StartSq,EndSq,board):  
             #quan co di chuyen tu vi tri 
             this.startRow=StartSq[0]
@@ -231,8 +221,6 @@ class Move():
             this.pieceCaptured=board[this.endRow][this.endCol]
             #phong cap
             this.pawnPromotion = (this.pieceMove == "wP" and this.endRow == 0) or (this.pieceMove == "bP" and this.endRow == 7)
-           
-           
             #sau do luu vao Movelog de co the undo
             this.MoveID = this.startRow*1000 + this.startCol*100 + this.endRow*10 + this.endCol
             

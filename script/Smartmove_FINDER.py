@@ -1,55 +1,54 @@
 import random
 
 piece_score = { "K": 0, "Q" : 10, "R" : 5, "B" : 3,"N" : 3, "P" : 1}
-CHECKMATE = 1000    #Điểm số với tình huống chiếu tướng
-STALEMATE = 0       #Điểm số với tình huống hết nước đi
-DEPTH = 2
+CheckMate = 1000    #Điểm số với tình huống chiếu hết
+StaleMate = 0       #Điểm số với tình huống hết nước đi
+DEPTH = 1
 
 
 #Những nước đi bừa
 def findRandomMove(vaildMoves):
     return vaildMoves[random.randint(0, len(vaildMoves)-1)]
 
-
 #Những nước đi dựa thuần vào giá trị
 def findBestMove(Gs, vaildMoves):
     
     """Greedy
-    Đặt checkmate 1000 điểm, giả sư AI là đen
+    Đặt CheckMate 1000 điểm, giả sử AI là đen
     AI(đen player_move tiến tới điểm âm -1000) sẽ có điểm xấu nhất là 1000,
     như vậy AI sẽ phải liên tục tìm hướng đi để tiến tới điểm lý tưởng của nó
     
-    Đặt checkmate 1000 điểm, giả sư AI là trắng
+    Đặt CheckMate 1000 điểm, giả sư AI là trắng
     AI(trắng oppents tiến tới điểm âm 1000) sẽ có điểm xấu nhất là -1000,
     như vậy AI sẽ phải liên tục tìm hướng đi để tiến tới điểm lý tưởng của nó
     """
     turn_multiplier = 1 if Gs.Wturn else -1
-    opponentMinMaxScore = CHECKMATE 
+    opponentMinMaxScore = CheckMate 
     bestPlayerMove = None
     random.shuffle(vaildMoves)
     for player_move in vaildMoves:
         Gs.MakeMove(player_move)    #thực hiện lịch di chuyển
         opponentsMoves = Gs.GetValidMove()
-        if Gs.STALEMATE:
-            opponentMaxScore = STALEMATE
-        elif Gs.CHECKMATE:
-            opponentMaxScore = -CHECKMATE
+        if Gs.StaleMate:
+            opponentMaxScore = StaleMate
+        elif Gs.CheckMate:
+            opponentMaxScore = -CheckMate
         else:
-            opponentMaxScore = -CHECKMATE
+            opponentMaxScore = -CheckMate
             for opponentsMove in opponentsMoves:
                 Gs.MakeMove(opponentsMove)
                 Gs.GetValidMove()
                 if Gs.CheckMate:
-                    score = CHECKMATE
+                    score = CheckMate
                 elif Gs.StaleMate:
-                    score = STALEMATE
+                    score = StaleMate
                 else:
                     score = -turn_multiplier * score_material(Gs.board)
                 if score > opponentMaxScore:
                     opponentMaxScore = score
                 Gs.UndoMove()
         if opponentMaxScore < opponentMinMaxScore:
-            print("max= ",opponentMaxScore,"Minmax= ",opponentMinMaxScore) 
+            print("max = ",opponentMaxScore,"Minmax = ",opponentMinMaxScore) 
             opponentMinMaxScore = opponentMaxScore
             bestPlayerMove = player_move
         Gs.UndoMove()               #Undo lệnh di chuyển thừa
@@ -70,7 +69,7 @@ def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
     
     if WhiteTurn:
         random.shuffle(validMoves)
-        maxScore = -CHECKMATE
+        maxScore = -CheckMate
         for move in validMoves:
             Gs.MakeMove(move)
             nextMoves = Gs.GetValidMove()
@@ -84,7 +83,7 @@ def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
             
     else:
         random.shuffle(validMoves)
-        minScore = CHECKMATE
+        minScore = CheckMate
         for move in validMoves:
             Gs.MakeMove(move)
             nextMoves = Gs.GetValidMove()
@@ -102,11 +101,11 @@ def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
 def scoreBoard(Gs):
     if Gs.CheckMate:
         if Gs.Wturn:
-            return -CHECKMATE #black wins
+            return -CheckMate #black wins
         else:
-            return CHECKMATE #white wins
-    elif Gs.Stalemate:
-        return STALEMATE
+            return CheckMate #white wins
+    elif Gs.StaleMate:
+        return StaleMate
     
     score = 0 
     for row in Gs.board:
