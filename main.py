@@ -89,7 +89,7 @@ def main():
             
         #AI tìm đường
         if not GameOver and not human_turn:
-            AI_move = Smartmove_FINDER.findBestMoveMinMax(Gs,ValidMove)
+            AI_move = Smartmove_FINDER.findBestMove(Gs,ValidMove)
             if AI_move is None:
                 AI_move = Smartmove_FINDER.findRandomMove(ValidMove)
             Gs.MakeMove(AI_move)
