@@ -68,7 +68,7 @@ class Gamestate():
                 
             if len(moves) == 0: #neu khong con nuoc di nao nua
                 if this.InCheck():
-                    this.CheckMate = True #chieu het
+                    this.CheckMate = True #chieu het    
                 else:
                     this.StaleMate = True # hoa
             else:
@@ -210,15 +210,16 @@ class Move():
         
         def __init__(this,StartSq,EndSq,board):  
             #quan co di chuyen tu vi tri 
-            this.startRow=StartSq[0]
-            this.startCol=StartSq[1]
+            this.startRow = StartSq[0]
+            this.startCol = StartSq[1]
             #den vi tri nay
-            this.endRow=EndSq[0]
-            this.endCol=EndSq[1]
+            this.endRow = EndSq[0]
+            this.endCol = EndSq[1]
             #cho biet quan co nao dang duoc chon
-            this.pieceMove=board[this.startRow][this.startCol]
+            this.pieceMove = board[this.startRow][this.startCol]
             #cho biet quan co nao da bi an
-            this.pieceCaptured=board[this.endRow][this.endCol]
+            this.pieceCaptured = board[this.endRow][this.endCol]
+            
             #phong cap
             this.pawnPromotion = (this.pieceMove == "wP" and this.endRow == 0) or (this.pieceMove == "bP" and this.endRow == 7)
             #sau do luu vao Movelog de co the undo

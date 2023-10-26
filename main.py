@@ -52,9 +52,8 @@ def main():
                     #print(Location)
                     #print(Sq_size)
                     #print(col,row)
-                    
                     #neu nhu player bam vao o vuong 2 lan thi no co the nhan dien la da di 1 nuoc, vay nen ta can tranh truong hop do
-                    if Sq_selected == (row,col): #neu player click vao 1 o vuong 2 lan
+                    if Sq_selected == (row,col) or col >=8: #neu player click vao 1 o vuong 2 lan
                         Sq_selected =() #lam cho tuple rong = bo chon
                         Player_click =[] #nhu tren
                     else: #khi nuoc di day hop le
@@ -63,9 +62,11 @@ def main():
                     
                     if len(Player_click)==2: 
                         move = chess_engine.Move(Player_click[0],Player_click[1],Gs.board)
-                        print(move.GetChessNotation())
+                        
+                        print(move.pieceMove[1] + move.GetChessNotation())
+                        
                         if move in ValidMove:
-                            if not Gs.Wturn:
+                            if Gs.Wturn:
                                 print("White turn!")
                             else:
                                 print("Black Turn!")                 
@@ -88,7 +89,7 @@ def main():
             
         #AI tìm đường
         if not GameOver and not human_turn:
-            AI_move = Smartmove_FINDER.findBestMoveMinMax(Gs, ValidMove)
+            AI_move = Smartmove_FINDER.findBestMove(Gs,ValidMove)
             if AI_move is None:
                 AI_move = Smartmove_FINDER.findRandomMove(ValidMove)
             Gs.MakeMove(AI_move)
@@ -105,16 +106,10 @@ def main():
         
         drawGamestate(Screen,Gs,ValidMove,Sq_selected)
         
-        if Gs.CheckMate:
+        if Gs.CheckMate or Gs.StaleMate:
             GameOver = True
-            if Gs.Wturn:
-                drawText(Screen,'Black win!')
-            else:
-                drawText(Screen,'White win!')  
-        elif Gs.StaleMate:
-            GameOver = True
-            drawText(Screen,'Stalemate!')  
-        
+            drawEndGameText(Screen,text = 'Stalemate!!' if Gs.StaleMate else 'Black win!' if Gs.Wturn else 'White win!')
+             
         Clock.tick(Max_fps)
         pygame.display.flip()
 
@@ -124,7 +119,7 @@ def drawGamestate(Screen,Gs,ValidMove,Sq_selected):
     drawBoard(Screen) #ve o vuong tren ban co
     highlightSq(Screen,Gs,ValidMove,Sq_selected)
     drawPiece(Screen,Gs.board) #ve quan co
-    
+
 #ve o vuong
 def drawBoard(Screen):
     global Colors
@@ -155,7 +150,8 @@ def highlightSq(Screen,Gs,ValidMove,Sq_selected):
             for move in ValidMove:
                 if move.startRow == r and move.startCol == c:
                     Screen.blit(s,(move.endCol*Sq_size,move.endRow*Sq_size))
-                
+
+
 def Animation(move, Screen, board, Clock):
     global Colors
     dR = move.endRow - move.startRow
@@ -172,12 +168,13 @@ def Animation(move, Screen, board, Clock):
         pygame.draw.rect(Screen,Color,endSq)
         if move.pieceCaptured != "--" :
             Screen.blit(Asset[move.pieceCaptured],endSq)
-
-        Screen.blit(Asset[move.pieceMove], pygame.Rect(c*Sq_size,r*Sq_size,Sq_size,Sq_size))
+            
+        if move.pieceMove != "--":
+            Screen.blit(Asset[move.pieceMove], pygame.Rect(c*Sq_size,r*Sq_size,Sq_size,Sq_size))
         pygame.display.flip()
         Clock.tick(60)
 
-def drawText(Screen,text):
+def drawEndGameText(Screen,text):
     font = pygame.font.SysFont("Helvitca",32,True,False)
     textObject = font.render(text,0, pygame.Color('White'))
     textLocation = pygame.Rect(0,0,Width,Height).move(Width/2-textObject.get_width()/2,Height/2-textObject.get_height()/2)

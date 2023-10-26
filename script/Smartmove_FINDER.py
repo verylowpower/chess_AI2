@@ -3,15 +3,27 @@ import random
 piece_score = { "K": 0, "Q" : 10, "R" : 5, "B" : 3,"N" : 3, "P" : 1}
 CheckMate = 1000    #Điểm số với tình huống chiếu hết
 StaleMate = 0       #Điểm số với tình huống hết nước đi
-DEPTH = 1
+DEPTH = 3
 
+#gắn giá trị lên bàn cờ để quân cờ ưu tiên di chuyển tới đó
+KnightScore =  [[1,1,1,1,1,1,1,1],
+                [1,2,2,2,2,2,2,1],
+                [1,2,3,3,3,3,2,1],
+                [1,2,3,4,4,3,2,1],
+                [1,2,3,4,4,3,2,1],
+                [1,2,3,3,3,3,2,1],
+                [1,2,2,2,2,2,2,1],
+                [1,1,1,1,1,1,1,1]]
+
+piecePositionScore = {"N":KnightScore}
 
 #Những nước đi bừa
 def findRandomMove(vaildMoves):
     return vaildMoves[random.randint(0, len(vaildMoves)-1)]
 
-#Những nước đi dựa thuần vào giá trị
-def findBestMove(Gs, vaildMoves):
+#Những nước đi dựa thuần vào giá tri
+#find best move without rescursion
+def findBestMoveMinMaxNoRescursion(Gs, vaildMoves):
     
     """Greedy
     Đặt CheckMate 1000 điểm, giả sử AI là đen
@@ -48,7 +60,7 @@ def findBestMove(Gs, vaildMoves):
                     opponentMaxScore = score
                 Gs.UndoMove()
         if opponentMaxScore < opponentMinMaxScore:
-            print("max = ",opponentMaxScore,"Minmax = ",opponentMinMaxScore) 
+            #print("max = ",opponentMaxScore,"Minmax = ",opponentMinMaxScore) 
             opponentMinMaxScore = opponentMaxScore
             bestPlayerMove = player_move
         Gs.UndoMove()               #Undo lệnh di chuyển thừa
@@ -56,14 +68,19 @@ def findBestMove(Gs, vaildMoves):
 
 
 #Phương thức helper giúp gọi đệ quy
-def findBestMoveMinMax(Gs,validMoves):
-    global nextMove
+def findBestMove(Gs,validMoves):
+    global nextMove, counter
     nextMove = None
-    findMoveMinMax(Gs, validMoves, DEPTH, Gs.Wturn)
+    counter = 0
+    #findMoveMinMax(Gs, validMoves, DEPTH, Gs.Wturn)
+    #findMoveNegaMax(Gs, validMoves, DEPTH, 1 if Gs.Wturn else -1)
+    findMoveNegaMaxAlphaBeta(Gs,validMoves, DEPTH, -CheckMate, CheckMate, 1 if Gs.Wturn else -1)
+    print(counter)
     return nextMove
 
 def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
-    global nextMove
+    global nextMove, counter
+    counter += 1
     if depth == 0:
         return score_material(Gs.board)
     
@@ -94,9 +111,47 @@ def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
                     nextMove = move
             Gs.UndoMove()
         return minScore
+    
+def findMoveNegaMax(Gs,validMoves, depth, turnMutiplier):
+    global nextMove, counter
+    counter += 1
+    if depth == 0:
+        return turnMutiplier * scoreBoard(Gs)
+    maxScore = -CheckMate
+    for move in validMoves:
+        Gs.MakeMove(move)
+        nextMoves = Gs.GetValidMove()
+        score = -findMoveNegaMax(Gs, nextMoves, depth -1 , -turnMutiplier)
+        if score > maxScore:
+            maxScore = score
+            if depth == DEPTH:
+                nextMove = move
+        Gs.UndoMove()
+    return maxScore
+
+def findMoveNegaMaxAlphaBeta(Gs,validMoves, depth, alpha, beta, turnMutiplier):
+    global nextMove, counter
+    counter += 1
+    if depth == 0:
+        return turnMutiplier * scoreBoard(Gs)
+    #move odering - implement later
+    maxScore = -CheckMate
+    for move in validMoves:
+        Gs.MakeMove(move)
+        nextMoves = Gs.GetValidMove()
+        score = findMoveNegaMaxAlphaBeta(Gs, nextMoves, depth -1 ,-alpha, -beta, -turnMutiplier)
+        if score > maxScore:
+            maxScore = score
+            if depth == DEPTH:
+                nextMove = move
+        Gs.UndoMove()
+        if maxScore > alpha: #puring happen
+            alpha = maxScore
+        if alpha >= beta:
+            break
+    return maxScore
                     
                 
-
 #A postive score is good for white, a negative is good for black
 def scoreBoard(Gs):
     if Gs.CheckMate:
