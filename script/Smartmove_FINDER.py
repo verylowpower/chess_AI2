@@ -3,7 +3,7 @@ import random
 piece_score = { "K": 0, "Q" : 10, "R" : 5, "B" : 3,"N" : 3, "P" : 1}
 CheckMate = 1000    #Điểm số với tình huống chiếu hết
 StaleMate = 0       #Điểm số với tình huống hết nước đi
-DEPTH = 2
+DEPTH = 3
 
 #gắn giá trị lên bàn cờ để quân cờ ưu tiên di chuyển tới đó
 KnightScore =  [[1, 1, 1, 1 ,1, 1 ,1, 1],
@@ -118,9 +118,9 @@ def findBestMove(Gs,validMoves,returnQueue):
     global nextMove, counter
     nextMove = None
     counter = 0
-    findMoveMinMax(Gs, validMoves, DEPTH, Gs.Wturn)
+    #findMoveMinMax(Gs, validMoves, DEPTH, Gs.Wturn)
     #findMoveNegaMax(Gs, validMoves, DEPTH, 1 if Gs.Wturn else -1)
-    #findMoveNegaMaxAlphaBeta(Gs,validMoves, DEPTH, -CheckMate, CheckMate, 1 if Gs.Wturn else -1)
+    findMoveNegaMaxAlphaBeta(Gs,validMoves, DEPTH, -CheckMate, CheckMate, 1 if Gs.Wturn else -1)
     print(counter)
     returnQueue.put(nextMove) 
 
@@ -189,7 +189,7 @@ def findMoveNegaMaxAlphaBeta(Gs,validMoves, depth, alpha, beta, turnMutiplier):
     for move in validMoves:
         Gs.MakeMove(move)
         nextMoves = Gs.GetValidMove()
-        score = -findMoveNegaMaxAlphaBeta(Gs, nextMoves, depth -1 ,-alpha, -beta, -turnMutiplier)
+        score = -findMoveNegaMaxAlphaBeta(Gs, nextMoves, depth-1 , -beta, -alpha, -turnMutiplier)
         if score > maxScore:
             maxScore = score
             if depth == DEPTH:
