@@ -3,6 +3,7 @@ import pygame
 
 
 from script import chess_engine, Smartmove_FINDER #truy cap module
+from multiprocessing import Process, Queue
 
 
 Width = Height = 512 #kich thuoc ban co 
@@ -35,7 +36,9 @@ def main():
     #thoat game 
     player_one = True #đúng khi người chơi quân trắng, sai khi Ai chơi quân trắng
     player_two = False #Như trên nhưng với cho quân đen
-   
+    AIthiking = False
+    moveFinderProcess = None
+    moveUndone = False
     while running:
         human_turn = (Gs.Wturn and player_one) or (not Gs.Wturn and player_two)
         #Kiểm tra người chơi hay máy chơi
@@ -44,7 +47,7 @@ def main():
                 running = False    
                 #track chuot
             elif e.type == pygame.MOUSEBUTTONDOWN:#ghi nhan xem chuot bam xuong(down) nhu nao, trong bao lau, trai hay phai,..
-                if not GameOver and human_turn:
+                if not GameOver:
                     Location=pygame.mouse.get_pos()#toa do x, y cua chuot
                     #lam nhu nay ta co the biet duoc chuot dang chon o vuong o vi tri nao
                     col = Location[0]//Sq_size
@@ -60,7 +63,7 @@ def main():
                         Sq_selected=(row,col) #luu 2 bien col, row vao tuple
                         Player_click.append(Sq_selected) #them o vuong duoc chon vao danh sach quan co duoc chon
                     
-                    if len(Player_click)==2: 
+                    if len(Player_click)==2 and human_turn: 
                         move = chess_engine.Move(Player_click[0],Player_click[1],Gs.board)
                         
                         print(move.pieceMove[1] + move.GetChessNotation())
@@ -85,16 +88,42 @@ def main():
                     MoveMade = True
                     Animate = False
                     print("undo")
-        
+                    if AIthiking:
+                        moveFinderProcess.terminate()
+                        AIthiking = False
+                    moveUndone = True
+                
+                if e.key == pygame.K_r: 
+                    Gs = chess_engine.Gamestate()
+                    ValidMove = Gs.GetValidMove()
+                    Sq_selected = ()
+                    Player_click = []
+                    MoveMade = False
+                    Animate = False
+                    GameOver = False
+                    if AIthiking:
+                        moveFinderProcess.terminate()
+                        AIthiking = False
+                    moveUndone = False
             
         #AI tìm đường
-        if not GameOver and not human_turn:
-            AI_move = Smartmove_FINDER.findBestMove(Gs,ValidMove)
-            if AI_move is None:
-                AI_move = Smartmove_FINDER.findRandomMove(ValidMove)
-            Gs.MakeMove(AI_move)
-            MoveMade = True
-            Animate = True
+        if not GameOver and not human_turn and not moveUndone:
+            if not AIthiking:
+                AIthiking = True
+                print("thinking...")
+                returnQueue = Queue() #used to pass data between threads
+                moveFinderProcess = Process(target=Smartmove_FINDER.findBestMove, args=(Gs, ValidMove,returnQueue))
+                moveFinderProcess.start() #call findBestMoves(Gs, ValidMove,returnQueue)
+              
+            if not moveFinderProcess.is_alive():
+                print("done thinking")
+                AI_move = returnQueue.get()
+                if AI_move is None:
+                    AI_move = Smartmove_FINDER.findRandomMove(ValidMove)
+                Gs.MakeMove(AI_move)
+                MoveMade = True
+                Animate = True
+                AIthiking = False
         
         if MoveMade:
             if Animate:
@@ -102,6 +131,7 @@ def main():
             ValidMove = Gs.GetValidMove()
             MoveMade = False 
             Animate = False
+            moveUndone = False
             
         
         drawGamestate(Screen,Gs,ValidMove,Sq_selected)
