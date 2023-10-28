@@ -3,19 +3,65 @@ import random
 piece_score = { "K": 0, "Q" : 10, "R" : 5, "B" : 3,"N" : 3, "P" : 1}
 CheckMate = 1000    #Điểm số với tình huống chiếu hết
 StaleMate = 0       #Điểm số với tình huống hết nước đi
-DEPTH = 3
+DEPTH = 2
 
 #gắn giá trị lên bàn cờ để quân cờ ưu tiên di chuyển tới đó
-KnightScore =  [[1,1,1,1,1,1,1,1],
-                [1,2,2,2,2,2,2,1],
-                [1,2,3,3,3,3,2,1],
-                [1,2,3,4,4,3,2,1],
-                [1,2,3,4,4,3,2,1],
-                [1,2,3,3,3,3,2,1],
-                [1,2,2,2,2,2,2,1],
-                [1,1,1,1,1,1,1,1]]
+KnightScore =  [[1, 1, 1, 1 ,1, 1 ,1, 1],
+                [1, 2, 2, 2, 2, 2, 2, 1],
+                [1, 2, 3, 3, 3, 3, 2, 1],
+                [1, 2, 3, 4, 4, 3, 2, 1],
+                [1, 2, 3, 4, 4, 3, 2, 1],
+                [1, 2, 3, 3, 3, 3, 2, 1],
+                [1, 2, 2, 2, 2, 2, 2, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1]]
 
-piecePositionScore = {"N":KnightScore}
+bishopScores = [[4, 3, 2, 1 ,1, 2 ,3, 4],
+                [3, 4, 3, 2, 2, 3, 4, 3],
+                [2, 3, 4, 3, 3, 4, 3, 2],
+                [1, 2, 3, 4, 4, 3, 2, 1],
+                [1, 2, 3, 4, 4, 3, 2, 1],
+                [2, 3, 4, 3, 3, 4, 3, 2],
+                [3, 4, 3, 2, 2, 3, 4, 3],
+                [4, 3, 2, 1, 1, 2, 3, 4]]
+
+queenScores =  [[1, 1, 1, 3, 1, 1, 1, 1],
+                [1, 2, 3, 3, 3, 1, 1, 1], 
+                [1, 4, 3, 3, 3, 4, 2, 1], 
+                [1, 2, 3, 3, 3, 2, 2, 1],
+                [1, 4, 3, 3, 3, 4, 2, 1],
+                [1, 2, 3, 3, 3, 2, 2, 1],
+                [1, 1, 2, 3, 3, 1, 1, 1],
+                [1, 1, 1, 3, 1, 1, 1, 1]]
+
+rockScores = [[4, 3, 4, 4, 4, 4, 3, 4], 
+              [4, 4, 4, 4, 4, 4, 4, 4], 
+              [1, 1, 2, 3, 3, 2, 1, 1], 
+              [1, 2, 3, 4, 4, 3, 2, 1], 
+              [1, 2, 3, 4, 4, 3, 2, 1], 
+              [1, 1, 2, 2, 2, 2, 1, 1], 
+              [4, 4, 4, 4, 4, 4, 4, 4], 
+              [4, 3, 4, 4, 4, 4, 3, 4]]
+
+whitePawnScores =  [[8, 8, 8, 8, 8, 8, 8, 8], 
+                    [8, 8, 8, 8, 8, 8, 8, 8],
+                    [5, 6, 6, 7, 7, 6, 6, 5],
+                    [2, 3, 3, 5, 5, 3, 3, 2],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [1, 1, 2, 3, 3, 2, 1, 1],
+                    [1, 1, 1, 0, 0, 1, 1, 1],
+                    [0, 0, 0, 0, 0, 0, 0, 0]]
+
+blackPawnScores =  [[0, 0, 0, 0, 0, 0, 0, 0],
+                    [1, 1, 1, 0, 0, 1,1, 1],
+                    [1, 1, 2, 3, 3, 2, 1, 1],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [2, 3, 3, 5, 5, 3, 3, 2],
+                    [5, 6, 6, 7, 7, 6, 6, 5], 
+                    [8, 8, 8, 8, 8, 8, 8, 8], 
+                    [8, 8, 8, 8, 8, 8, 8, 8]]
+
+
+piecePositionScores = {"N":KnightScore, "Q":queenScores, "B": bishopScores, "R": rockScores, "bP":blackPawnScores, "wP":whitePawnScores}
 
 #Những nước đi bừa
 def findRandomMove(vaildMoves):
@@ -68,15 +114,15 @@ def findBestMoveMinMaxNoRescursion(Gs, vaildMoves):
 
 
 #Phương thức helper giúp gọi đệ quy
-def findBestMove(Gs,validMoves):
+def findBestMove(Gs,validMoves,returnQueue):
     global nextMove, counter
     nextMove = None
     counter = 0
-    #findMoveMinMax(Gs, validMoves, DEPTH, Gs.Wturn)
+    findMoveMinMax(Gs, validMoves, DEPTH, Gs.Wturn)
     #findMoveNegaMax(Gs, validMoves, DEPTH, 1 if Gs.Wturn else -1)
-    findMoveNegaMaxAlphaBeta(Gs,validMoves, DEPTH, -CheckMate, CheckMate, 1 if Gs.Wturn else -1)
+    #findMoveNegaMaxAlphaBeta(Gs,validMoves, DEPTH, -CheckMate, CheckMate, 1 if Gs.Wturn else -1)
     print(counter)
-    return nextMove
+    returnQueue.put(nextMove) 
 
 def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
     global nextMove, counter
@@ -95,6 +141,7 @@ def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
                 maxScore = score
                 if depth == DEPTH:
                     nextMove = move
+                    print(move, score)
             Gs.UndoMove()
         return maxScore
             
@@ -109,6 +156,7 @@ def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
                 minScore = score
                 if depth == DEPTH:
                     nextMove = move
+                    print(move, score)
             Gs.UndoMove()
         return minScore
     
@@ -118,6 +166,7 @@ def findMoveNegaMax(Gs,validMoves, depth, turnMutiplier):
     if depth == 0:
         return turnMutiplier * scoreBoard(Gs)
     maxScore = -CheckMate
+    random.shuffle(validMoves)
     for move in validMoves:
         Gs.MakeMove(move)
         nextMoves = Gs.GetValidMove()
@@ -136,14 +185,16 @@ def findMoveNegaMaxAlphaBeta(Gs,validMoves, depth, alpha, beta, turnMutiplier):
         return turnMutiplier * scoreBoard(Gs)
     #move odering - implement later
     maxScore = -CheckMate
+    random.shuffle(validMoves)
     for move in validMoves:
         Gs.MakeMove(move)
         nextMoves = Gs.GetValidMove()
-        score = findMoveNegaMaxAlphaBeta(Gs, nextMoves, depth -1 ,-alpha, -beta, -turnMutiplier)
+        score = -findMoveNegaMaxAlphaBeta(Gs, nextMoves, depth -1 ,-alpha, -beta, -turnMutiplier)
         if score > maxScore:
             maxScore = score
             if depth == DEPTH:
                 nextMove = move
+                print(move, score)
         Gs.UndoMove()
         if maxScore > alpha: #puring happen
             alpha = maxScore
@@ -163,13 +214,24 @@ def scoreBoard(Gs):
         return StaleMate
     
     score = 0 
-    for row in Gs.board:
-        for square in row:
-            if square[0] == 'w':
-                score += piece_score[square[1]]
-            elif square[0] =='b':
-                score -= piece_score[square[1]]
-    
+    for row in range(len(Gs.board)):
+        for col in range(len(Gs.board[row])):
+            square = Gs.board[row][col]
+            if square != "--":
+                #score it positionally
+                piecePositionScore = 0
+                
+                if square[1] != "K":    #no position table for king
+                    if square[1]=="P":  #for pawns
+                        piecePositionScore = piecePositionScores[square][row][col]
+                    else:   #for other pieces
+                        piecePositionScore = piecePositionScores[square[1]][row][col]
+                
+                if square[0] == 'w':
+                    score += piece_score[square[1]] + piecePositionScore
+                elif square[0] =='b':
+                    score -= piece_score[square[1]] + piecePositionScore
+        
     return score
             
             
