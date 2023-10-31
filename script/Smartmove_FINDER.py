@@ -3,7 +3,7 @@ import random
 piece_score = { "K": 0, "Q" : 10, "R" : 5, "B" : 3,"N" : 3, "P" : 1}
 CheckMate = 1000    #Điểm số với tình huống chiếu hết
 StaleMate = 0       #Điểm số với tình huống hết nước đi
-DEPTH = 3
+DEPTH = 2
 
 #gắn giá trị lên bàn cờ để quân cờ ưu tiên di chuyển tới đó
 KnightScore =  [[1, 1, 1, 1 ,1, 1 ,1, 1],
@@ -52,7 +52,7 @@ whitePawnScores =  [[8, 8, 8, 8, 8, 8, 8, 8],
                     [0, 0, 0, 0, 0, 0, 0, 0]]
 
 blackPawnScores =  [[0, 0, 0, 0, 0, 0, 0, 0],
-                    [1, 1, 1, 0, 0, 1,1, 1],
+                    [1, 1, 1, 0, 0, 1, 1, 1],
                     [1, 1, 2, 3, 3, 2, 1, 1],
                     [1, 2, 3, 4, 4, 3, 2, 1],
                     [2, 3, 3, 5, 5, 3, 3, 2],
@@ -115,12 +115,15 @@ def findBestMoveMinMaxNoRescursion(Gs, vaildMoves):
 
 #Phương thức helper giúp gọi đệ quy
 def findBestMove(Gs,validMoves,returnQueue):
-    global nextMove, counter
+    global nextMove, counter, count
     nextMove = None
     counter = 0
+    count = 0
+    #findBestMoveMinMaxNoRescursion(Gs, validMoves)
     #findMoveMinMax(Gs, validMoves, DEPTH, Gs.Wturn)
+    findMoveMinMaxAlphaBeta(Gs, validMoves, DEPTH, -CheckMate, CheckMate, Gs.Wturn)
     #findMoveNegaMax(Gs, validMoves, DEPTH, 1 if Gs.Wturn else -1)
-    findMoveNegaMaxAlphaBeta(Gs,validMoves, DEPTH, -CheckMate, CheckMate, 1 if Gs.Wturn else -1)
+    #findMoveNegaMaxAlphaBeta(Gs,validMoves, DEPTH, -CheckMate, CheckMate, 1 if Gs.Wturn else -1)
     print(counter)
     returnQueue.put(nextMove) 
 
@@ -160,6 +163,52 @@ def findMoveMinMax(Gs, validMoves, depth, WhiteTurn):
             Gs.UndoMove()
         return minScore
     
+    
+def findMoveMinMaxAlphaBeta(Gs, validMoves, depth, alpha, beta, WhiteTurn):
+    global nextMove, counter
+    counter += 1
+    if depth == 0:
+        #return score_material(Gs.board)
+        return scoreBoard(Gs)
+    
+    if WhiteTurn:
+        random.shuffle(validMoves)
+        maxScore = -CheckMate
+        for move in validMoves:
+            Gs.MakeMove(move)
+            nextMoves = Gs.GetValidMove()
+            score = findMoveMinMaxAlphaBeta(Gs, nextMoves, depth -1, alpha, beta, False)
+            if score > maxScore:
+                maxScore = score
+                if depth == DEPTH:
+                    nextMove = move
+                    print(move.pieceMove[1]+move.GetChessNotation() , score)
+            #puring happen
+            alpha = max(alpha, maxScore)
+            if alpha >= beta:
+                break    
+            Gs.UndoMove()
+        return maxScore
+            
+    else:
+        random.shuffle(validMoves)
+        minScore = CheckMate
+        for move in validMoves:
+            Gs.MakeMove(move)
+            nextMoves = Gs.GetValidMove()
+            score = findMoveMinMaxAlphaBeta(Gs, nextMoves, depth -1 , alpha, beta, True)
+            if score < minScore:
+                minScore = score
+                if depth == DEPTH:
+                    nextMove = move
+                    print(move.pieceMove[1]+move.GetChessNotation() , score)
+            #puring happen
+            beta = min(beta, minScore)
+            if alpha >= beta:
+                break
+            Gs.UndoMove()
+        return minScore
+
 def findMoveNegaMax(Gs,validMoves, depth, turnMutiplier):
     global nextMove, counter
     counter += 1
@@ -175,11 +224,12 @@ def findMoveNegaMax(Gs,validMoves, depth, turnMutiplier):
             maxScore = score
             if depth == DEPTH:
                 nextMove = move
+                print(move, score)
         Gs.UndoMove()
     return maxScore
 
 def findMoveNegaMaxAlphaBeta(Gs,validMoves, depth, alpha, beta, turnMutiplier):
-    global nextMove, counter
+    global nextMove, counter, count
     counter += 1
     if depth == 0:
         return turnMutiplier * scoreBoard(Gs)
@@ -187,6 +237,8 @@ def findMoveNegaMaxAlphaBeta(Gs,validMoves, depth, alpha, beta, turnMutiplier):
     maxScore = -CheckMate
     random.shuffle(validMoves)
     for move in validMoves:
+        count +=1
+        #print(count)
         Gs.MakeMove(move)
         nextMoves = Gs.GetValidMove()
         score = -findMoveNegaMaxAlphaBeta(Gs, nextMoves, depth-1 , -beta, -alpha, -turnMutiplier)
@@ -194,7 +246,7 @@ def findMoveNegaMaxAlphaBeta(Gs,validMoves, depth, alpha, beta, turnMutiplier):
             maxScore = score
             if depth == DEPTH:
                 nextMove = move
-                print(move, score)
+                print(move.pieceMove[1]+move.GetChessNotation() , score)
         Gs.UndoMove()
         if maxScore > alpha: #puring happen
             alpha = maxScore
